@@ -766,3 +766,20 @@ body {
         transform: translateY(0);
     }
 }
+
+.link-button-row-blue {
+    background: none;
+    border: none;
+    color: #3b82f6;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    padding: 4px 8px;
+    text-decoration: none;
+}
+
+.link-button-row-blue:hover {
+    color: #60a5fa;
+    transform: scale(1.02);
+}
