@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Login - Your Money Go</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/animations.css">
+</head>
+<body style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
+    <div class="card">
+        <div style="margin-bottom: 1rem;">
+            <button id="backButton" class="back-button-simple">
+                <i class="fas fa-arrow-left"></i> kembali
+            </button>
+        </div>
+        
+        <h2 class="card-title">Selamat Datang</h2>
+        
+        <div id="errorMessage" class="error-message-custom" style="display: none;"></div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Email</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="email" placeholder="Masukkan email Anda">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Password</label>
+                <div class="password-wrapper">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" placeholder="Masukkan password" maxlength="8">
+                    <i class="fas fa-eye-slash toggle-password" id="toggleLoginPassword"></i>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-primary">Masuk</button>
+        </form>
+        
+        <div class="auth-links-row">
+            <button id="forgotPasswordBtn" class="link-button-row">Lupa Password?</button>
+            <span class="separator">|</span>
+            <button id="registerBtn" class="link-button-row">Registrasi Akun</button>
+        </div>
+    </div>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+    <script src="../js/firebase-config.js"></script>
+    
+    <script>
+        document.getElementById('backButton')?.addEventListener('click', () => {
+            window.location.href = '../index.html';
+        });
+        
+        document.getElementById('forgotPasswordBtn')?.addEventListener('click', () => {
+            window.location.href = 'forgot-password.html';
+        });
+        
+        document.getElementById('registerBtn')?.addEventListener('click', () => {
+            window.location.href = 'register.html';
+        });
+        
+        // Toggle Password Login
+        const toggleLoginPassword = document.getElementById('toggleLoginPassword');
+        const loginPasswordInput = document.getElementById('password');
+        
+        if (toggleLoginPassword) {
+            toggleLoginPassword.addEventListener('click', function() {
+                const type = loginPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                loginPasswordInput.setAttribute('type', type);
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+        }
+        
+        const loginForm = document.getElementById('loginForm');
+        const emailInput = document.getElementById('email');
+        const errorDiv = document.getElementById('errorMessage');
+        
+        let hideTimeout;
+        
+        function hideErrorMessage() {
+            if (hideTimeout) clearTimeout(hideTimeout);
+            errorDiv.style.display = 'none';
+        }
+        
+        function showErrorMessage(message) {
+            if (hideTimeout) clearTimeout(hideTimeout);
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            hideTimeout = setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+        
+        emailInput.addEventListener('focus', hideErrorMessage);
+        loginPasswordInput.addEventListener('focus', hideErrorMessage);
+        
+        loginForm?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = emailInput.value.trim();
+            const password = loginPasswordInput.value;
+            
+            if (!email || !password) {
+                showErrorMessage('Isi kotak yang kosong terlebih dahulu');
+                return;
+            }
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                window.location.href = '../dashboard.html';
+            } catch (error) {
+                if (error.code === 'auth/user-not-found') {
+                    showErrorMessage('Email tidak terdaftar');
+                } else if (error.code === 'auth/wrong-password') {
+                    showErrorMessage('Password salah');
+                } else {
+                    showErrorMessage('Email atau password salah');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

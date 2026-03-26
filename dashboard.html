@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Dashboard - Your Money Go</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-logo">
+                <div class="logo-icon-wrapper">
+                    <i class="fas fa-person-running logo-runner"></i>
+                    <i class="fas fa-coins logo-money"></i>
+                    <i class="fas fa-bills logo-money"></i>
+                    <i class="fas fa-money-bill-wave logo-money"></i>
+                </div>
+                <span>Your Money Go</span>
+            </div>
+            <div class="sidebar-menu">
+                <div class="menu-item active" data-tab="daily">
+                    <i class="fas fa-calendar-day"></i>
+                    <span>Harian</span>
+                </div>
+                <div class="menu-item" data-tab="weekly">
+                    <i class="fas fa-calendar-week"></i>
+                    <span>Mingguan</span>
+                </div>
+                <div class="menu-item" data-tab="monthly">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Bulanan</span>
+                </div>
+                <div class="menu-item" data-tab="yearly">
+                    <i class="fas fa-calendar-year"></i>
+                    <span>Tahunan</span>
+                </div>
+                <div class="menu-item" data-tab="summary">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Ringkasan</span>
+                </div>
+            </div>
+            <div class="sidebar-footer">
+                <button id="logoutBtn" class="logout-btn-sidebar">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="main-header">
+                <div class="header-welcome">
+                    <h2>Selamat Datang, <span id="userName">Loading...</span></h2>
+                    <p>Kelola keuanganmu dengan bijak untuk masa depan yang lebih baik</p>
+                </div>
+                <div class="header-date">
+                    <i class="fas fa-calendar"></i>
+                    <span id="currentDate"></span>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-cards">
+                <div class="stat-card income-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Total Pemasukan</h3>
+                        <div class="stat-value" id="totalIncome">Rp 0</div>
+                    </div>
+                </div>
+                <div class="stat-card expense-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Total Pengeluaran</h3>
+                        <div class="stat-value" id="totalExpense">Rp 0</div>
+                    </div>
+                </div>
+                <div class="stat-card balance-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Sisa Saldo</h3>
+                        <div class="stat-value" id="balance">Rp 0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Daily Tab -->
+                <div id="dailyTab" class="tab-pane active">
+                    <div class="tab-header">
+                        <h3><i class="fas fa-calendar-day"></i> Transaksi Harian</h3>
+                        <button class="btn-add" onclick="openTransactionModal('daily')">
+                            <i class="fas fa-plus"></i> Tambah Transaksi
+                        </button>
+                    </div>
+                    <div class="date-selector">
+                        <input type="date" id="dailyDate" class="date-input">
+                    </div>
+                    <div class="transactions-list" id="dailyTransactions">
+                        <div class="empty-state">
+                            <i class="fas fa-receipt"></i>
+                            <p>Belum ada transaksi hari ini</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weekly Tab -->
+                <div id="weeklyTab" class="tab-pane">
+                    <div class="tab-header">
+                        <h3><i class="fas fa-calendar-week"></i> Transaksi Mingguan</h3>
+                        <button class="btn-add" onclick="openTransactionModal('weekly')">
+                            <i class="fas fa-plus"></i> Tambah Transaksi
+                        </button>
+                    </div>
+                    <div class="week-selector">
+                        <button class="week-nav" onclick="changeWeek(-1)"><i class="fas fa-chevron-left"></i></button>
+                        <span id="weekRange" class="week-range"></span>
+                        <button class="week-nav" onclick="changeWeek(1)"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div class="transactions-list" id="weeklyTransactions">
+                        <div class="empty-state">
+                            <i class="fas fa-receipt"></i>
+                            <p>Belum ada transaksi minggu ini</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monthly Tab -->
+                <div id="monthlyTab" class="tab-pane">
+                    <div class="tab-header">
+                        <h3><i class="fas fa-calendar-alt"></i> Transaksi Bulanan</h3>
+                        <button class="btn-add" onclick="openTransactionModal('monthly')">
+                            <i class="fas fa-plus"></i> Tambah Transaksi
+                        </button>
+                    </div>
+                    <div class="month-selector">
+                        <input type="month" id="monthlyMonth" class="month-input">
+                    </div>
+                    <div class="transactions-list" id="monthlyTransactions">
+                        <div class="empty-state">
+                            <i class="fas fa-receipt"></i>
+                            <p>Belum ada transaksi bulan ini</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Yearly Tab -->
+                <div id="yearlyTab" class="tab-pane">
+                    <div class="tab-header">
+                        <h3><i class="fas fa-calendar-year"></i> Transaksi Tahunan</h3>
+                        <button class="btn-add" onclick="openTransactionModal('yearly')">
+                            <i class="fas fa-plus"></i> Tambah Transaksi
+                        </button>
+                    </div>
+                    <div class="year-selector">
+                        <select id="yearlyYear" class="year-input"></select>
+                    </div>
+                    <div class="transactions-list" id="yearlyTransactions">
+                        <div class="empty-state">
+                            <i class="fas fa-receipt"></i>
+                            <p>Belum ada transaksi tahun ini</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Tab -->
+                <div id="summaryTab" class="tab-pane">
+                    <div class="tab-header">
+                        <h3><i class="fas fa-chart-pie"></i> Ringkasan Keuangan</h3>
+                    </div>
+                    <div class="summary-content">
+                        <div class="chart-container">
+                            <canvas id="expenseChart"></canvas>
+                        </div>
+                        <div class="summary-stats">
+                            <div class="summary-card">
+                                <h4>Kategori Pengeluaran Terbanyak</h4>
+                                <div id="topCategories"></div>
+                            </div>
+                            <div class="summary-card">
+                                <h4>Tips Keuangan</h4>
+                                <ul class="tips-list">
+                                    <li><i class="fas fa-lightbulb"></i> Catat setiap pengeluaran kecil</li>
+                                    <li><i class="fas fa-chart-line"></i> Targetkan 20% penghasilan untuk tabungan</li>
+                                    <li><i class="fas fa-coffee"></i> Kurangi pengeluaran yang tidak perlu</li>
+                                    <li><i class="fas fa-chart-bar"></i> Evaluasi keuangan setiap bulan</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tambah Transaksi -->
+    <div id="transactionModal" class="modal-dashboard">
+        <div class="modal-content-dashboard">
+            <div class="modal-header-dashboard">
+                <h3><i class="fas fa-plus-circle"></i> Tambah Transaksi</h3>
+                <span class="modal-close-dashboard">&times;</span>
+            </div>
+            <div class="modal-body-dashboard">
+                <form id="transactionForm">
+                    <div class="form-group-dashboard">
+                        <label><i class="fas fa-exchange-alt"></i> Jenis Transaksi</label>
+                        <div class="type-selector">
+                            <button type="button" class="type-btn income-btn active" data-type="income">
+                                <i class="fas fa-arrow-down"></i> Pemasukan
+                            </button>
+                            <button type="button" class="type-btn expense-btn" data-type="expense">
+                                <i class="fas fa-arrow-up"></i> Pengeluaran
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group-dashboard">
+                        <label><i class="fas fa-tags"></i> Kategori</label>
+                        <select id="category" required>
+                            <option value="">Pilih Kategori</option>
+                            <!-- Kategori akan diisi dinamis berdasarkan jenis transaksi -->
+                        </select>
+                    </div>
+                    <div class="form-group-dashboard">
+                        <label><i class="fas fa-money-bill-wave"></i> Jumlah (Rp)</label>
+                        <input type="number" id="amount" placeholder="0" required>
+                    </div>
+                    <div class="form-group-dashboard">
+                        <label><i class="fas fa-pen"></i> Deskripsi</label>
+                        <input type="text" id="description" placeholder="Catatan transaksi...">
+                    </div>
+                    <div class="form-group-dashboard">
+                        <label><i class="fas fa-calendar-alt"></i> Tanggal</label>
+                        <input type="date" id="transactionDate" required>
+                    </div>
+                    <button type="submit" class="btn-save">
+                        <i class="fas fa-save"></i> Simpan Transaksi
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
