@@ -50,7 +50,7 @@
         </form>
         
         <div class="auth-links-row" style="margin-top: 1rem;">
-            <button id="backToLogin" class="link-button-row-blue">Kembali ke Login</button>
+            <button id="cancelButton" class="link-button-row-blue">Batalkan</button>
         </div>
     </div>
     
@@ -60,7 +60,7 @@
     <script src="../js/firebase-config.js"></script>
     
     <script>
-        // ==================== AMBIL PARAMETER DARI URL FIREBASE ====================
+        // ==================== AMBIL PARAMETER DARI URL ====================
         const urlParams = new URLSearchParams(window.location.search);
         const mode = urlParams.get('mode');
         const oobCode = urlParams.get('oobCode');
@@ -80,9 +80,17 @@
         const hintAnswerInput = document.getElementById('hintAnswer');
         const errorDiv = document.getElementById('errorMessage');
         const successDiv = document.getElementById('successMessage');
+        const cancelButton = document.getElementById('cancelButton');
         
         let hideTimeout;
-        let storedEmail = null; // Untuk menyimpan email hasil verifikasi
+        let verifiedEmail = null;
+        
+        // ==================== CANCEL BUTTON ====================
+        if (cancelButton) {
+            cancelButton.addEventListener('click', () => {
+                window.location.href = 'login.html';
+            });
+        }
         
         // ==================== TOGGLE PASSWORD ====================
         if (toggleNewPassword) {
@@ -93,11 +101,6 @@
                 this.classList.toggle('fa-eye-slash');
             });
         }
-        
-        // ==================== BACK TO LOGIN ====================
-        document.getElementById('backToLogin')?.addEventListener('click', () => {
-            window.location.href = 'login.html';
-        });
         
         // ==================== FUNGSI UTILITY ====================
         function showError(message) {
@@ -134,7 +137,7 @@
             return { valid: true, message: '' };
         }
         
-        // ==================== VERIFIKASI HINT DARI FIRESTORE ====================
+        // ==================== VERIFIKASI HINT ====================
         async function verifyHint(email, question, answer) {
             try {
                 const usersRef = db.collection('users');
@@ -162,9 +165,8 @@
         }
         
         // ==================== AMBIL EMAIL DARI OOBCODE ====================
-        async function getEmailFromOobCode(code) {
+        async function getEmailFromCode(code) {
             try {
-                // Firebase function to verify password reset code
                 const email = await auth.verifyPasswordResetCode(code);
                 return email;
             } catch (error) {
@@ -173,14 +175,13 @@
             }
         }
         
-        // ==================== INISIALISASI HALAMAN ====================
+        // ==================== INISIALISASI ====================
         async function initializePage() {
-            // Jika ada oobCode, verifikasi dan dapatkan email
+            // Jika ada oobCode dari Firebase, verifikasi dan dapatkan email
             if (mode === 'resetPassword' && oobCode) {
                 try {
-                    // Verifikasi kode reset password untuk mendapatkan email
                     const email = await auth.verifyPasswordResetCode(oobCode);
-                    storedEmail = email;
+                    verifiedEmail = email;
                     if (emailInput) {
                         emailInput.value = email;
                     }
@@ -198,7 +199,7 @@
             } 
             // Jika ada email dari URL, gunakan langsung
             else if (resetEmail) {
-                storedEmail = resetEmail;
+                verifiedEmail = resetEmail;
                 if (emailInput) {
                     emailInput.value = resetEmail;
                 }
@@ -213,35 +214,31 @@
             }
         }
         
-        // ==================== SUBMIT FORM RESET PASSWORD ====================
+        // ==================== SUBMIT FORM ====================
         resetForm?.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Ambil email dari input (jika ada)
             let email = emailInput.value.trim();
             
-            // Jika email kosong tapi ada storedEmail, gunakan storedEmail
-            if (!email && storedEmail) {
-                email = storedEmail;
+            if (!email && verifiedEmail) {
+                email = verifiedEmail;
             }
             
             const hintQuestion = hintQuestionSelect.value;
             const hintAnswer = hintAnswerInput.value.trim();
             const newPassword = newPasswordInput.value;
             
-            // Validasi email
+            // Validasi
             if (!email) {
                 showError('Email yang anda masukkan tidak tepat');
                 return;
             }
             
-            // Validasi hint
             if (!hintQuestion || !hintAnswer) {
                 showError('Isi semua bagian yang kosong terlebih dahulu');
                 return;
             }
             
-            // Validasi password
             if (!newPassword) {
                 showError('Password baru tidak boleh kosong');
                 return;
@@ -253,7 +250,7 @@
                 return;
             }
             
-            // Verifikasi email dan hint dari Firestore
+            // Verifikasi hint
             const verification = await verifyHint(email, hintQuestion, hintAnswer);
             
             if (!verification.exists) {
@@ -266,51 +263,30 @@
                 return;
             }
             
-            // ==================== RESET PASSWORD ====================
+            // Reset password menggunakan oobCode
             try {
-                // Jika ada oobCode, gunakan confirmPasswordReset
                 if (mode === 'resetPassword' && oobCode) {
-                    // Reset password menggunakan kode dari Firebase
                     await auth.confirmPasswordReset(oobCode, newPassword);
                     showSuccess('Perubahan diterima, silahkan login..');
-                    
-                    // Redirect ke login setelah 3 detik
                     setTimeout(() => {
                         window.location.href = 'login.html';
                     }, 3000);
-                } 
-                // Jika tidak ada oobCode, kirim email reset baru
-                else {
-                    // Kirim email reset password baru
-                    await auth.sendPasswordResetEmail(email);
-                    showSuccess('Link reset password telah dikirim ke email Anda. Silakan cek inbox atau folder spam.');
-                    
-                    setTimeout(() => {
-                        window.location.href = 'login.html';
-                    }, 5000);
+                } else {
+                    showError('Link reset password tidak valid. Silakan minta link baru dari halaman lupa password.');
                 }
-                
-                // Reset form
-                resetForm.reset();
-                
             } catch (error) {
                 console.error('Reset password error:', error);
-                
                 if (error.code === 'auth/expired-action-code') {
                     showError('Link reset password sudah kadaluarsa. Silakan minta link baru.');
                 } else if (error.code === 'auth/invalid-action-code') {
                     showError('Link reset password tidak valid. Silakan minta link baru.');
-                } else if (error.code === 'auth/user-not-found') {
-                    showError('Email yang anda masukkan tidak tepat');
-                } else if (error.code === 'auth/weak-password') {
-                    showError('Password terlalu lemah. Gunakan 8 karakter dengan huruf besar dan simbol.');
                 } else {
                     showError('Terjadi kesalahan, silakan coba lagi');
                 }
             }
         });
         
-        // ==================== HILANGKAN PESAN SAAT USER KLIK INPUT ====================
+        // Hilangkan pesan saat user klik input
         const inputs = [emailInput, hintQuestionSelect, hintAnswerInput, newPasswordInput];
         inputs.forEach(input => {
             if (input) {
@@ -322,7 +298,7 @@
             }
         });
         
-        // ==================== JALANKAN INISIALISASI ====================
+        // Jalankan inisialisasi
         initializePage();
     </script>
 </body>
